@@ -189,6 +189,16 @@ SingleSourceMovesTreeNode *InitNewTreeNode(Board board, checkersPos *pos)
         return NULL;
     }
 
+    node->pos = (checkersPos *)malloc(sizeof(checkersPos));
+    if (node->pos == NULL)
+    {
+        free(node);
+        return NULL;
+    }
+    
+    node->pos->row = pos->row;
+    node->pos->col = pos->col;
+
     for (int i = 0; i < BOARD_SIZE; i++) 
     {
         for (int j = 0; j < BOARD_SIZE; j++) 
@@ -197,7 +207,6 @@ SingleSourceMovesTreeNode *InitNewTreeNode(Board board, checkersPos *pos)
         }
     }
 
-    node->pos = pos;
     node->total_captures_so_far = 0;
     return node;
 }
@@ -260,6 +269,17 @@ SingleSourceMoveListCell *InitNewSingleSourceMoveList(checkersPos *pos, unsigned
     {
         return NULL;
     }
+
+    cell->position = (checkersPos *)malloc(sizeof(checkersPos));
+    if (cell->position == NULL)
+    {
+        free(cell);
+        return NULL;
+    }
+    
+    cell->position->row = pos->row;
+    cell->position->col = pos->col;
+
     cell->captures = captures;
     cell->next = NULL;
     return cell;
@@ -292,7 +312,8 @@ MultipleSourceMovesList *FindAllPossiblePlayerMoves(Board borad, Player player) 
     }
 
     MultipleSourceMovesListCell *cell;
-
+    
+    //iterate the board to find a block wite player and edit the pos
     for (int i = 0; i < BOARD_SIZE; i++)
     {
         pos.row = i;
@@ -301,6 +322,7 @@ MultipleSourceMovesList *FindAllPossiblePlayerMoves(Board borad, Player player) 
             pos.col = j;
             if (borad[i][j] == player)
             {   
+                //find for this block the best move and add this move to the list
                 cell = InitNewMultipleSourceMovesListCell(FindSingleSourceOptimalMove(FindSingleSourceMoves(borad, &pos)));
 
                 if (list->head == NULL)
@@ -371,6 +393,7 @@ void Turn(Board board, Player player)
 
 
 /**************exe 5****************/
+
 
 
 /* void initializeBoard(CheckersGame* game) {
