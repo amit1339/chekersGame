@@ -257,7 +257,7 @@ SingleSourceMoveList *FindSingleSourceOptimalMove(SingleSourceMovesTree *moves_t
         list->tail = cell;
         cell = cell->next;
     }
-
+    //TODO delete tree
     return list;
 }
 
@@ -335,6 +335,7 @@ MultipleSourceMovesList *FindAllPossiblePlayerMoves(Board borad, Player player) 
             }
         }
     }
+
     return list;
 }
 
@@ -382,61 +383,95 @@ void Turn(Board board, Player player)
     }
 
     //make the play
+
+    printf("%c%d->",PosToChr(play->position), play->position->col);
     while (play->next != NULL)
     {
         board[play->position->row][play->position->col] = NULL; // NULL for empty block
         play = play->next;
     }
     board[play->position->row][play->position->col] = player;
-
+    printf("%c%d\n",PosToChr(play->position), play->position->col);
 }
 
 
 /**************exe 5****************/
 
+void PlayGame(Board board, Player starting_player)
+{
+    // print board, who`s turn, make the turn and print it, print the board again
+    PrintBoard(board);
+    printf("its %c turn\n", starting_player);
+    Turn(board, starting_player);
+    PrintBoard(board);
+    //TODO: insert this logic into a loop
+}
 
+char PosToChr(checkersPos *pos)
+{
+    char LUT[BOARD_SIZE];
+    for (int i = 0; i < BOARD_SIZE; i++)
+    {
+        LUT[i] = 'A' + i;
+    }
+    return LUT[pos->row];
+}
 
-/* void initializeBoard(CheckersGame* game) {
+void InitializeBoard(Board board) 
+{
     // Initialize empty squares
     for (int row = 0; row < BOARD_SIZE; row++) {
-        for (int col = 0; col < BOARD_SIZE; col++) {
-            game->board[row][col].isEmpty = true;
+        for (int col = 0; col < BOARD_SIZE; col++) 
+        {
+            board[row][col] = NULL;
         }
     }
 
-    // Add black pieces
-    for (int row = 0; row < 3; row++) {
-        for (int col = 0; col < BOARD_SIZE; col += 2) {
+    // Add T pieces
+    for (int row = 0; row < 3; row++) 
+    {
+        for (int col = 0; col < BOARD_SIZE; col += 2) 
+        {
             if (row % 2 == 0)
-                game->board[row][col + 1].isBlack = true;
+            {
+                board[row][col + 1] = 'T';
+            }
             else
-                game->board[row][col].isBlack = true;
-
-            game->board[row][col].isEmpty = false;
+            {
+                board[row][col] = 'T';
+            }
+            board[row][col] = 'B';
         }
     }
 
-    // Add white pieces
-    for (int row = BOARD_SIZE - 1; row >= BOARD_SIZE - 3; row--) {
-        for (int col = 0; col < BOARD_SIZE; col += 2) {
+    // Add B pieces
+    for (int row = BOARD_SIZE - 1; row >= BOARD_SIZE - 3; row--) 
+    {
+        for (int col = 0; col < BOARD_SIZE; col += 2) 
+        {
             if (row % 2 == 0)
-                game->board[row][col + 1].isEmpty = false;
+            {
+                board[row][col + 1] = 'B';
+            }
             else
-                game->board[row][col].isEmpty = false;
+            {
+                board[row][col] = 'B';;
+            }
         }
     }
 }
 
-void printBoard(const CheckersGame* game) {
+void PrintBoard(Board board) 
+{
     printf("\n   0  1  2  3  4   5  6  7\n");
     printf(" +---+---+---+---+---+---+---+---+\n");
     for (int row = 0; row < BOARD_SIZE; row++) {
         printf("%d|", row);
         for (int col = 0; col < BOARD_SIZE; col++) {
-            if (game->board[row][col].isEmpty) {
+            if (board[row][col] == NULL) {
                 printf("   |");
             } else {
-                if (game->board[row][col].isBlack)
+                if (board[row][col] == 'T')
                     printf(" T |");
                 else
                     printf(" B |");
@@ -444,5 +479,15 @@ void printBoard(const CheckersGame* game) {
         }
         printf("\n +---+---+---+---+---+---+---+---+\n");
     }
-} */
+}
+
+
+int main()
+{
+    Board board;
+    InitializeBoard(board);
+    PlayGame(board, 'T');
+
+    return 0;
+}
 
