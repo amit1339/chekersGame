@@ -1,60 +1,27 @@
-#include <stdio.h>
-#include <stdbool.h>
-#include <stdlib.h>
+#include "checkersGame.h"
 
-#define BOARD_SIZE 8
-#define LEFT 0
-#define RIGHT 1
+
 
 /*exe 1*/
 
-typedef struct _checkersPos
-{
-    char row;
-    char col;
-} checkersPos;
-
-typedef unsigned char Board[BOARD_SIZE][BOARD_SIZE];
-typedef unsigned char Player;
-
-typedef struct _SingleSourceMovesTreeNode
-{
-    Board board;
-    checkersPos *pos;
-    unsigned short total_captures_so_far; // num of skips
-    struct _SingleSourceMovesTreeNode *next_move[2];
-} SingleSourceMovesTreeNode;
-
-typedef struct _SingleSourceMovesTree
-{
-    SingleSourceMovesTreeNode *source;
-}SingleSourceMovesTree;
-
-SingleSourceMovesTree *FindSingleSourceMoves(Board board, checkersPos *src) //TODO free all cell if aloc fail
+SingleSourceMovesTree *FindSingleSourceMoves(Board board, checkersPos *src) 
 {
     
-    SingleSourceMovesTree *tree = (SingleSourceMovesTree *)malloc(sizeof(SingleSourceMovesTree));
-    if (tree == NULL)
+    SingleSourceMovesTreeNode *source = InitNewTreeNode(board, src);
+    if (source == NULL)
     {
-        return NULL;
-    }
-
-    tree->source = InitNewTreeNode(board, src);
-    if (tree->source == NULL)
-    {
-        free (tree);
         return NULL;
     }
 
     switch (board[src->row][src->col])
     {
     case 'B': //bottom to top movement
-        FillTreeLeftSideB(tree->source, board, src, 'T');
-        FillTreeRightSideB(tree->source, board, src, 'T');
+        FillTreeLeftSideB(source, board, src, 'T');
+        FillTreeRightSideB(source, board, src, 'T');
         break;
     case 'T': //top to bottom movement
-        FillTreeLeftSideT(tree->source, board, src, 'B');
-        FillTreeRightSideT(tree->source, board, src, 'B');
+        FillTreeLeftSideT(source, board, src, 'B');
+        FillTreeRightSideT(source, board, src, 'B');
         break;
     
     default:
@@ -64,20 +31,37 @@ SingleSourceMovesTree *FindSingleSourceMoves(Board board, checkersPos *src) //TO
     }
     
 
+    if (source == NULL)
+    {
+        return NULL;
+    }
+    
+    SingleSourceMovesTree *tree = (SingleSourceMovesTree *)malloc(sizeof(SingleSourceMovesTree));
+    if (tree == NULL)
+    {
+        DeleteTreeNodes(source);
+        return NULL;
+    }
+
+    tree->source = source;
     return tree;
 }
 
 void FillTreeLeftSideB(SingleSourceMovesTreeNode *src, Board borad, checkersPos *pos, Player oponnent)
-{
+{   
     //if tile is inside board
-    if (pos->row + 1 < 8 && pos->col - 1 >= 0) // wrap in bool function
+    if (pos->row + 1 < 8 && pos->col - 1 >= 0) 
     {
 
         //if jump tile is inside board AND you can jump over the opponent (eat/jump)
-        if (pos->row + 2 < 8 && pos->col - 2 >= 0 && (borad[pos->row + 1][pos->col - 1] == oponnent && borad[pos->row + 2][pos->col - 2] == NULL)) 
+        if (pos->row + 2 < 8 && pos->col - 2 >= 0 && (borad[pos->row + 1][pos->col - 1] == oponnent && borad[pos->row + 2][pos->col - 2] == '\0')) 
         {
                 //proceed to jump over and recursively call
                 src->next_move[LEFT] = InitNewTreeNode(borad, pos);
+                if (src->next_move[LEFT] == NULL)
+                {
+                    DeleteTreeNodes(src);
+                }
                 src->next_move[LEFT]->pos->col -= 2;
                 src->next_move[LEFT]->pos->row += 2;
                 src->total_captures_so_far += 1;
@@ -86,7 +70,7 @@ void FillTreeLeftSideB(SingleSourceMovesTreeNode *src, Board borad, checkersPos 
         }
 
         //you cant jump or there is no opponent, next move is just a regular move
-        else if (borad[pos->row + 1][pos->col-1] == NULL)
+        else if (borad[pos->row + 1][pos->col-1] == '\0')
         {
             src->next_move[LEFT] = InitNewTreeNode(borad, pos);
             src->next_move[LEFT]->pos->col -= 1;
@@ -103,10 +87,14 @@ void FillTreeRightSideB(SingleSourceMovesTreeNode *src, Board borad, checkersPos
     {
 
         //if jump tile is inside board AND you can jump over the opponent (eat/jump)
-        if (pos->row + 2 < 8 && pos->col + 2 >= 0 && (borad[pos->row + 1][pos->col + 1] == oponnent && borad[pos->row + 2][pos->col + 2] == NULL)) 
+        if (pos->row + 2 < 8 && pos->col + 2 >= 0 && (borad[pos->row + 1][pos->col + 1] == oponnent && borad[pos->row + 2][pos->col + 2] == '\0')) 
         {
                 //proceed to jump over and recursively call
                 src->next_move[RIGHT] = InitNewTreeNode(borad, pos);
+                if (src->next_move[RIGHT] == NULL)
+                {
+                    DeleteTreeNodes(src);
+                }
                 src->next_move[RIGHT]->pos->col += 2;
                 src->next_move[RIGHT]->pos->row += 2;
                 src->total_captures_so_far += 1;
@@ -115,7 +103,7 @@ void FillTreeRightSideB(SingleSourceMovesTreeNode *src, Board borad, checkersPos
         }
 
         //you cant jump or there is no opponent, next move is just a regular move
-        else if (borad[pos->row + 1][pos->col+1] == NULL)
+        else if (borad[pos->row + 1][pos->col+1] == '\0')
         {
             src->next_move[RIGHT] = InitNewTreeNode(borad, pos);
             src->next_move[RIGHT]->pos->col += 1;
@@ -131,10 +119,14 @@ void FillTreeLeftSideT(SingleSourceMovesTreeNode *src, Board borad, checkersPos 
     {
 
         //if jump tile is inside board AND you can jump over the opponent (eat/jump)
-        if (pos->row - 2 < 8 && pos->col - 2 >= 0 && (borad[pos->row - 1][pos->col - 1] == oponnent && borad[pos->row - 2][pos->col - 2] == NULL)) 
+        if (pos->row - 2 < 8 && pos->col - 2 >= 0 && (borad[pos->row - 1][pos->col - 1] == oponnent && borad[pos->row - 2][pos->col - 2] == '\0')) 
         {
                 //proceed to jump over and recursively call
                 src->next_move[LEFT] = InitNewTreeNode(borad, pos);
+                if (src->next_move[LEFT] == NULL)
+                {
+                    DeleteTreeNodes(src);
+                }
                 src->next_move[LEFT]->pos->col -= 2;
                 src->next_move[LEFT]->pos->row -= 2;
                 src->total_captures_so_far += 1;
@@ -143,7 +135,7 @@ void FillTreeLeftSideT(SingleSourceMovesTreeNode *src, Board borad, checkersPos 
         }
 
         //you cant jump or there is no opponent, next move is just a regular move
-        else if (borad[pos->row - 1][pos->col-1] == NULL)
+        else if (borad[pos->row - 1][pos->col-1] == '\0')
         {
             src->next_move[LEFT] = InitNewTreeNode(borad, pos);
             src->next_move[LEFT]->pos->col -= 1;
@@ -159,10 +151,15 @@ void FillTreeRightSideT(SingleSourceMovesTreeNode *src, Board borad, checkersPos
     {
 
         //if jump tile is inside board AND you can jump over the opponent (eat/jump)
-        if (pos->row - 2 < 8 && pos->col + 2 >= 0 && (borad[pos->row - 1][pos->col + 1] == oponnent && borad[pos->row - 2][pos->col + 2] == NULL)) 
+        if (pos->row - 2 < 8 && pos->col + 2 >= 0 && (borad[pos->row - 1][pos->col + 1] == oponnent && borad[pos->row - 2][pos->col + 2] == '\0')) 
         {
                 //proceed to jump over and recursively call
                 src->next_move[RIGHT] = InitNewTreeNode(borad, pos);
+                if (src->next_move[RIGHT] == NULL)
+                {
+                    DeleteTreeNodes(src);
+                }
+                
                 src->next_move[RIGHT]->pos->col += 2;
                 src->next_move[RIGHT]->pos->row -= 2;
                 src->total_captures_so_far += 1;
@@ -171,7 +168,7 @@ void FillTreeRightSideT(SingleSourceMovesTreeNode *src, Board borad, checkersPos
         }
 
         //you cant jump or there is no opponent, next move is just a regular move
-        else if (borad[pos->row - 1][pos->col+1] == NULL)
+        else if (borad[pos->row - 1][pos->col+1] == '\0')
         {
             src->next_move[RIGHT] = InitNewTreeNode(borad, pos);
             src->next_move[RIGHT]->pos->col += 1;
@@ -211,25 +208,25 @@ SingleSourceMovesTreeNode *InitNewTreeNode(Board board, checkersPos *pos)
     return node;
 }
 
-//TODO free TREE
+void DeleteTreeNodes(SingleSourceMovesTreeNode *node)
+{
+    if (node->next_move[LEFT] == NULL && node->next_move[RIGHT] == NULL)
+    {
+        free(node->pos);
+        node->pos = NULL;
+        free(node);
+        node = NULL;
+    }
+
+    DeleteTreeNodes(node->next_move[LEFT]);
+    DeleteTreeNodes(node->next_move[RIGHT]);
+}
+
 
 
 /***************exe 2***************/
 
-typedef struct _SingleSourceMoveListCell
-{
-    checkersPos *position;
-    unsigned short captures;
-    struct _SingleSourceMoveListCell *next;
-} SingleSourceMoveListCell;
-
-typedef struct _SingleSourceMoveList
-{
-    SingleSourceMoveListCell *head;
-    SingleSourceMoveListCell *tail;
-} SingleSourceMoveList;
-
-SingleSourceMoveList *FindSingleSourceOptimalMove(SingleSourceMovesTree *moves_tree) //TODO free all cell if aloc fail
+SingleSourceMoveList *FindSingleSourceOptimalMove(SingleSourceMovesTree *moves_tree) //TODO: fix seg fault
 {
     SingleSourceMoveList *list = (SingleSourceMoveList *)malloc(sizeof(SingleSourceMoveList));
     if (list == NULL)
@@ -239,6 +236,7 @@ SingleSourceMoveList *FindSingleSourceOptimalMove(SingleSourceMovesTree *moves_t
     SingleSourceMoveListCell *cell = InitNewSingleSourceMoveList(moves_tree->source->pos, moves_tree->source->total_captures_so_far);
 
     list->head = cell;
+    printf("fail in begin exe2\n");
 
     while (moves_tree->source != NULL)
     {   
@@ -247,17 +245,31 @@ SingleSourceMoveList *FindSingleSourceOptimalMove(SingleSourceMovesTree *moves_t
             moves_tree->source->next_move[RIGHT]->total_captures_so_far) // if they are equal we go left
         {
             cell->next = InitNewSingleSourceMoveList(moves_tree->source->pos, moves_tree->source->next_move[LEFT]->total_captures_so_far);
+            if (cell->next == NULL)
+            {
+                DeleteSingleSourceCell(cell);
+                return NULL;
+            }
+            
             moves_tree->source = moves_tree->source->next_move[LEFT];
         }
         else
         {
             cell->next = InitNewSingleSourceMoveList(moves_tree->source->pos, moves_tree->source->next_move[RIGHT]->total_captures_so_far);
+            if (cell->next == NULL)
+            {
+                DeleteSingleSourceCell(cell);
+                return NULL;
+            }
             moves_tree->source = moves_tree->source->next_move[RIGHT];
         }
         list->tail = cell;
         cell = cell->next;
     }
-    //TODO delete tree
+
+    printf("fail in end exe2\n");
+    DeleteTreeNodes(moves_tree->source);
+    free(moves_tree); //free tree
     return list;
 }
 
@@ -285,21 +297,21 @@ SingleSourceMoveListCell *InitNewSingleSourceMoveList(checkersPos *pos, unsigned
     return cell;
 }
 
-//TODO free list
+void DeleteSingleSourceCell(SingleSourceMoveListCell * cell)
+{
+    SingleSourceMoveListCell *next;
+    while (cell != NULL)
+    {
+        next = cell->next;
+        free(cell->position);
+        cell->position = NULL;
+        free(cell);
+        cell = next;
+    }
+    
+}
 
 /**************exe 3****************/
-
-typedef struct _multipleSourceMovesListCell
-{
-    SingleSourceMoveList *single_source_moves_list;
-    struct _multipleSourceMovesListCell *next;
-} MultipleSourceMovesListCell;
-
-typedef struct _multipleSourceMovesList
-{
-    MultipleSourceMovesListCell *head;
-    MultipleSourceMovesListCell *tail;
-} MultipleSourceMovesList;
 
 MultipleSourceMovesList *FindAllPossiblePlayerMoves(Board borad, Player player)  //TODO free all cell if aloc fail
 {
@@ -324,11 +336,19 @@ MultipleSourceMovesList *FindAllPossiblePlayerMoves(Board borad, Player player) 
             {   
                 //find for this block the best move and add this move to the list
                 cell = InitNewMultipleSourceMovesListCell(FindSingleSourceOptimalMove(FindSingleSourceMoves(borad, &pos)));
-
+                printf("fail in exe 3\n");
                 if (list->head == NULL)
                 {
                     list->head = cell;
                 }
+
+                if (cell == NULL)
+                {
+                    DeleteMultipleSourceMovesListCell(list->head);
+                    free(list);
+                    return NULL;
+                }
+
                 list->tail = cell;
                 cell = cell->next;
 
@@ -353,11 +373,24 @@ MultipleSourceMovesListCell *InitNewMultipleSourceMovesListCell(SingleSourceMove
     
 }
 
+void DeleteMultipleSourceMovesListCell(MultipleSourceMovesListCell *cell)
+{
+    MultipleSourceMovesListCell *next;
+    while (cell != NULL)
+    {
+        next = cell->next;
+        free(cell);
+        cell = next;
+    }
+    
+}
+
 /**************exe 4****************/
 
-void Turn(Board board, Player player)
+void Turn(Board board, Player player) //TODO: delete all moves after the play
 {
     MultipleSourceMovesList *list = FindAllPossiblePlayerMoves(board, player);
+    printf("fail in exe 4\n");
     unsigned short current_captures = 0;
     unsigned short max_captures = 0;
     MultipleSourceMovesListCell *multiple_move_cell = list->head;
@@ -387,11 +420,13 @@ void Turn(Board board, Player player)
     printf("%c%d->",PosToChr(play->position), play->position->col);
     while (play->next != NULL)
     {
-        board[play->position->row][play->position->col] = NULL; // NULL for empty block
+        board[play->position->row][play->position->col] = '\0'; // '\0' for empty block
         play = play->next;
     }
     board[play->position->row][play->position->col] = player;
     printf("%c%d\n",PosToChr(play->position), play->position->col);
+
+
 }
 
 
@@ -420,10 +455,11 @@ char PosToChr(checkersPos *pos)
 void InitializeBoard(Board board) 
 {
     // Initialize empty squares
-    for (int row = 0; row < BOARD_SIZE; row++) {
+    for (int row = 0; row < BOARD_SIZE; row++) 
+    {
         for (int col = 0; col < BOARD_SIZE; col++) 
         {
-            board[row][col] = NULL;
+            board[row][col] = '\0';
         }
     }
 
@@ -440,7 +476,6 @@ void InitializeBoard(Board board)
             {
                 board[row][col] = 'T';
             }
-            board[row][col] = 'B';
         }
     }
 
@@ -455,7 +490,7 @@ void InitializeBoard(Board board)
             }
             else
             {
-                board[row][col] = 'B';;
+                board[row][col] = 'B';
             }
         }
     }
@@ -463,21 +498,30 @@ void InitializeBoard(Board board)
 
 void PrintBoard(Board board) 
 {
-    printf("\n   0  1  2  3  4   5  6  7\n");
-    printf(" +---+---+---+---+---+---+---+---+\n");
-    for (int row = 0; row < BOARD_SIZE; row++) {
+    printf("\n   0  1  2  3  4  5  6  7\n");
+    printf(" +--+--+--+--+--+--+--+--+\n");
+    for (int row = 0; row < BOARD_SIZE; row++) 
+    {
         printf("%d|", row);
-        for (int col = 0; col < BOARD_SIZE; col++) {
-            if (board[row][col] == NULL) {
-                printf("   |");
-            } else {
+        for (int col = 0; col < BOARD_SIZE; col++) 
+        {
+            if (board[row][col] == '\0') 
+            {
+                printf("  |");
+            } 
+            else 
+            {
                 if (board[row][col] == 'T')
-                    printf(" T |");
+                {
+                    printf("T |");
+                }
                 else
-                    printf(" B |");
+                {
+                    printf("B |");
+                }
             }
         }
-        printf("\n +---+---+---+---+---+---+---+---+\n");
+        printf("\n +--+--+--+--+--+--+--+--+\n");
     }
 }
 
