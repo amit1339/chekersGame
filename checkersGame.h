@@ -85,6 +85,7 @@ void Turn(Board board, Player player);
 /**************exe 5****************/
 
 void PlayGame(Board board, Player starting_player);
+char CheckWin(Board board);
 
 /**************utils****************/
 char PosToChr(checkersPos *pos);

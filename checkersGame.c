@@ -6,40 +6,31 @@
 
 SingleSourceMovesTree *FindSingleSourceMoves(Board board, checkersPos *src) 
 {
-    
     SingleSourceMovesTreeNode *source = InitNewTreeNode(board, src);
     if (source == NULL)
     {
         return NULL;
     }
 
-    switch (board[src->row][src->col])
+    switch (board[(int)src->row][(int)src->col])
     {
-    case 'B': //bottom to top movement
-        FillTreeLeftSideB(source, board, src, 'T');
-        FillTreeRightSideB(source, board, src, 'T');
-        break;
-    case 'T': //top to bottom movement
-        FillTreeLeftSideT(source, board, src, 'B');
-        FillTreeRightSideT(source, board, src, 'B');
-        break;
-    
-    default:
-
-        return NULL;
-        break;
+        case 'B': //bottom to top movement
+            FillTreeLeftSideB(source, board, src, 'T');
+            FillTreeRightSideB(source, board, src, 'T');
+            break;
+        case 'T': //top to bottom movement
+            FillTreeLeftSideT(source, board, src, 'B');
+            FillTreeRightSideT(source, board, src, 'B');
+            break;
+        default:
+            DeleteTreeNodes(source);  // Clean up the tree if the source is invalid
+            return NULL;
     }
-    
 
-    if (source == NULL)
-    {
-        return NULL;
-    }
-    
     SingleSourceMovesTree *tree = (SingleSourceMovesTree *)malloc(sizeof(SingleSourceMovesTree));
     if (tree == NULL)
     {
-        DeleteTreeNodes(source);
+        DeleteTreeNodes(source);  // Clean up the tree if memory allocation fails
         return NULL;
     }
 
@@ -47,140 +38,137 @@ SingleSourceMovesTree *FindSingleSourceMoves(Board board, checkersPos *src)
     return tree;
 }
 
-void FillTreeLeftSideB(SingleSourceMovesTreeNode *src, Board borad, checkersPos *pos, Player oponnent)
-{   
-    //if tile is inside board
-    if (pos->row + 1 < 8 && pos->col - 1 >= 0) 
+void FillTreeLeftSideB(SingleSourceMovesTreeNode *src, Board board, checkersPos *pos, Player opponent)
+{
+    if (pos->row + 1 < BOARD_SIZE && pos->col - 1 >= 0)
     {
-
-        //if jump tile is inside board AND you can jump over the opponent (eat/jump)
-        if (pos->row + 2 < 8 && pos->col - 2 >= 0 && (borad[pos->row + 1][pos->col - 1] == oponnent && borad[pos->row + 2][pos->col - 2] == '\0')) 
+        if (pos->row + 2 < BOARD_SIZE && pos->col - 2 >= 0 && (board[pos->row + 1][pos->col - 1] == opponent && board[pos->row + 2][pos->col - 2] == '\0'))
         {
-                //proceed to jump over and recursively call
-                src->next_move[LEFT] = InitNewTreeNode(borad, pos);
-                if (src->next_move[LEFT] == NULL)
-                {
-                    DeleteTreeNodes(src);
-                }
-                src->next_move[LEFT]->pos->col -= 2;
-                src->next_move[LEFT]->pos->row += 2;
-                src->total_captures_so_far += 1;
-                FillTreeLeftSideB(src->next_move[LEFT], borad, src->next_move[LEFT]->pos, oponnent);
-                FillTreeRightSideB(src->next_move[RIGHT], borad, src->next_move[RIGHT]->pos, oponnent);
+            src->next_move[LEFT] = InitNewTreeNode(board, pos);
+            if (src->next_move[LEFT] == NULL)
+            {
+                DeleteTreeNodes(src);
+                return;
+            }
+            src->next_move[LEFT]->pos->col -= 2;
+            src->next_move[LEFT]->pos->row += 2;
+            src->total_captures_so_far += 1;
+            FillTreeLeftSideB(src->next_move[LEFT], board, src->next_move[LEFT]->pos, opponent);
+            FillTreeRightSideB(src->next_move[RIGHT], board, src->next_move[RIGHT]->pos, opponent);
         }
-
-        //you cant jump or there is no opponent, next move is just a regular move
-        else if (borad[pos->row + 1][pos->col-1] == '\0')
+        else if (board[pos->row + 1][pos->col - 1] == '\0')
         {
-            src->next_move[LEFT] = InitNewTreeNode(borad, pos);
+            src->next_move[LEFT] = InitNewTreeNode(board, pos);
+            if (src->next_move[LEFT] == NULL)
+            {
+                DeleteTreeNodes(src);
+                return;
+            }
             src->next_move[LEFT]->pos->col -= 1;
             src->next_move[LEFT]->pos->row += 1;
         }
     }
-    
 }
 
-void FillTreeRightSideB(SingleSourceMovesTreeNode *src, Board borad, checkersPos *pos, Player oponnent)
+void FillTreeRightSideB(SingleSourceMovesTreeNode *src, Board board, checkersPos *pos, Player opponent)
 {
-    //if tile is inside board
-    if (pos->row + 1 < 8 && pos->col + 1 >= 0) // wrap in bool function
+    if (pos->row + 1 < BOARD_SIZE && pos->col + 1 < BOARD_SIZE)
     {
-
-        //if jump tile is inside board AND you can jump over the opponent (eat/jump)
-        if (pos->row + 2 < 8 && pos->col + 2 >= 0 && (borad[pos->row + 1][pos->col + 1] == oponnent && borad[pos->row + 2][pos->col + 2] == '\0')) 
+        if (pos->row + 2 < BOARD_SIZE && pos->col + 2 < BOARD_SIZE && (board[pos->row + 1][pos->col + 1] == opponent && board[pos->row + 2][pos->col + 2] == '\0'))
         {
-                //proceed to jump over and recursively call
-                src->next_move[RIGHT] = InitNewTreeNode(borad, pos);
-                if (src->next_move[RIGHT] == NULL)
-                {
-                    DeleteTreeNodes(src);
-                }
-                src->next_move[RIGHT]->pos->col += 2;
-                src->next_move[RIGHT]->pos->row += 2;
-                src->total_captures_so_far += 1;
-                FillTreeLeftSideB(src->next_move[RIGHT], borad, src->next_move[RIGHT]->pos, oponnent);
-                FillTreeRightSideB(src->next_move[LEFT], borad, src->next_move[LEFT]->pos, oponnent);
+            src->next_move[RIGHT] = InitNewTreeNode(board, pos);
+            if (src->next_move[RIGHT] == NULL)
+            {
+                DeleteTreeNodes(src);
+                return;
+            }
+            src->next_move[RIGHT]->pos->col += 2;
+            src->next_move[RIGHT]->pos->row += 2;
+            src->total_captures_so_far += 1;
+            FillTreeLeftSideB(src->next_move[RIGHT], board, src->next_move[RIGHT]->pos, opponent);
+            FillTreeRightSideB(src->next_move[LEFT], board, src->next_move[LEFT]->pos, opponent);
         }
-
-        //you cant jump or there is no opponent, next move is just a regular move
-        else if (borad[pos->row + 1][pos->col+1] == '\0')
+        else if (board[pos->row + 1][pos->col + 1] == '\0')
         {
-            src->next_move[RIGHT] = InitNewTreeNode(borad, pos);
+            src->next_move[RIGHT] = InitNewTreeNode(board, pos);
+            if (src->next_move[RIGHT] == NULL)
+            {
+                DeleteTreeNodes(src);
+                return;
+            }
             src->next_move[RIGHT]->pos->col += 1;
             src->next_move[RIGHT]->pos->row += 1;
         }
     }
 }
 
-void FillTreeLeftSideT(SingleSourceMovesTreeNode *src, Board borad, checkersPos *pos, Player oponnent)
+void FillTreeLeftSideT(SingleSourceMovesTreeNode *src, Board board, checkersPos *pos, Player opponent)
 {
-    //if tile is inside board
-    if (pos->row - 1 < 8 && pos->col - 1 >= 0) // wrap in bool function
+    if (pos->row - 1 >= 0 && pos->col - 1 >= 0)
     {
-
-        //if jump tile is inside board AND you can jump over the opponent (eat/jump)
-        if (pos->row - 2 < 8 && pos->col - 2 >= 0 && (borad[pos->row - 1][pos->col - 1] == oponnent && borad[pos->row - 2][pos->col - 2] == '\0')) 
+        if (pos->row - 2 >= 0 && pos->col - 2 >= 0 && (board[pos->row - 1][pos->col - 1] == opponent && board[pos->row - 2][pos->col - 2] == '\0'))
         {
-                //proceed to jump over and recursively call
-                src->next_move[LEFT] = InitNewTreeNode(borad, pos);
-                if (src->next_move[LEFT] == NULL)
-                {
-                    DeleteTreeNodes(src);
-                }
-                src->next_move[LEFT]->pos->col -= 2;
-                src->next_move[LEFT]->pos->row -= 2;
-                src->total_captures_so_far += 1;
-                FillTreeLeftSideT(src->next_move[LEFT], borad, src->next_move[LEFT]->pos, oponnent);
-                FillTreeRightSideT(src->next_move[RIGHT], borad, src->next_move[RIGHT]->pos, oponnent);
+            src->next_move[LEFT] = InitNewTreeNode(board, pos);
+            if (src->next_move[LEFT] == NULL)
+            {
+                DeleteTreeNodes(src);
+                return;
+            }
+            src->next_move[LEFT]->pos->col -= 2;
+            src->next_move[LEFT]->pos->row -= 2;
+            src->total_captures_so_far += 1;
+            FillTreeLeftSideT(src->next_move[LEFT], board, src->next_move[LEFT]->pos, opponent);
+            FillTreeRightSideT(src->next_move[RIGHT], board, src->next_move[RIGHT]->pos, opponent);
         }
-
-        //you cant jump or there is no opponent, next move is just a regular move
-        else if (borad[pos->row - 1][pos->col-1] == '\0')
+        else if (board[pos->row - 1][pos->col - 1] == '\0')
         {
-            src->next_move[LEFT] = InitNewTreeNode(borad, pos);
+            src->next_move[LEFT] = InitNewTreeNode(board, pos);
+            if (src->next_move[LEFT] == NULL)
+            {
+                DeleteTreeNodes(src);
+                return;
+            }
             src->next_move[LEFT]->pos->col -= 1;
             src->next_move[LEFT]->pos->row -= 1;
         }
     }
 }
 
-void FillTreeRightSideT(SingleSourceMovesTreeNode *src, Board borad, checkersPos *pos, Player oponnent)
+void FillTreeRightSideT(SingleSourceMovesTreeNode *src, Board board, checkersPos *pos, Player opponent)
 {
-    //if tile is inside board
-    if (pos->row - 1 < 8 && pos->col + 1 >= 0) // wrap in bool function
+    if (pos->row - 1 >= 0 && pos->col + 1 < BOARD_SIZE)
     {
-
-        //if jump tile is inside board AND you can jump over the opponent (eat/jump)
-        if (pos->row - 2 < 8 && pos->col + 2 >= 0 && (borad[pos->row - 1][pos->col + 1] == oponnent && borad[pos->row - 2][pos->col + 2] == '\0')) 
+        if (pos->row - 2 >= 0 && pos->col + 2 < BOARD_SIZE && (board[pos->row - 1][pos->col + 1] == opponent && board[pos->row - 2][pos->col + 2] == '\0'))
         {
-                //proceed to jump over and recursively call
-                src->next_move[RIGHT] = InitNewTreeNode(borad, pos);
-                if (src->next_move[RIGHT] == NULL)
-                {
-                    DeleteTreeNodes(src);
-                }
-                
-                src->next_move[RIGHT]->pos->col += 2;
-                src->next_move[RIGHT]->pos->row -= 2;
-                src->total_captures_so_far += 1;
-                FillTreeLeftSideT(src->next_move[RIGHT], borad, src->next_move[RIGHT]->pos, oponnent);
-                FillTreeRightSideT(src->next_move[LEFT], borad, src->next_move[LEFT]->pos, oponnent);
+            src->next_move[RIGHT] = InitNewTreeNode(board, pos);
+            if (src->next_move[RIGHT] == NULL)
+            {
+                DeleteTreeNodes(src);
+                return;
+            }
+            src->next_move[RIGHT]->pos->col += 2;
+            src->next_move[RIGHT]->pos->row -= 2;
+            src->total_captures_so_far += 1;
+            FillTreeLeftSideT(src->next_move[RIGHT], board, src->next_move[RIGHT]->pos, opponent);
+            FillTreeRightSideT(src->next_move[LEFT], board, src->next_move[LEFT]->pos, opponent);
         }
-
-        //you cant jump or there is no opponent, next move is just a regular move
-        else if (borad[pos->row - 1][pos->col+1] == '\0')
+        else if (board[pos->row - 1][pos->col + 1] == '\0')
         {
-            src->next_move[RIGHT] = InitNewTreeNode(borad, pos);
+            src->next_move[RIGHT] = InitNewTreeNode(board, pos);
+            if (src->next_move[RIGHT] == NULL)
+            {
+                DeleteTreeNodes(src);
+                return;
+            }
             src->next_move[RIGHT]->pos->col += 1;
             src->next_move[RIGHT]->pos->row -= 1;
         }
     }
 }
 
-
 SingleSourceMovesTreeNode *InitNewTreeNode(Board board, checkersPos *pos)
 {
-    SingleSourceMovesTreeNode *node = (SingleSourceMovesTreeNode*)malloc(sizeof(SingleSourceMovesTreeNode));
+    SingleSourceMovesTreeNode *node = (SingleSourceMovesTreeNode *)malloc(sizeof(SingleSourceMovesTreeNode));
     if (node == NULL)
     {
         return NULL;
@@ -192,13 +180,13 @@ SingleSourceMovesTreeNode *InitNewTreeNode(Board board, checkersPos *pos)
         free(node);
         return NULL;
     }
-    
+
     node->pos->row = pos->row;
     node->pos->col = pos->col;
 
-    for (int i = 0; i < BOARD_SIZE; i++) 
+    for (int i = 0; i < BOARD_SIZE; i++)
     {
-        for (int j = 0; j < BOARD_SIZE; j++) 
+        for (int j = 0; j < BOARD_SIZE; j++)
         {
             node->board[i][j] = board[i][j];
         }
@@ -210,16 +198,18 @@ SingleSourceMovesTreeNode *InitNewTreeNode(Board board, checkersPos *pos)
 
 void DeleteTreeNodes(SingleSourceMovesTreeNode *node)
 {
-    if (node->next_move[LEFT] == NULL && node->next_move[RIGHT] == NULL)
+    if (node == NULL)
     {
-        free(node->pos);
-        node->pos = NULL;
-        free(node);
-        node = NULL;
+        return;
     }
 
     DeleteTreeNodes(node->next_move[LEFT]);
     DeleteTreeNodes(node->next_move[RIGHT]);
+
+    free(node->pos);
+    node->pos = NULL;
+    free(node);
+    node = NULL;
 }
 
 
@@ -236,8 +226,6 @@ SingleSourceMoveList *FindSingleSourceOptimalMove(SingleSourceMovesTree *moves_t
     SingleSourceMoveListCell *cell = InitNewSingleSourceMoveList(moves_tree->source->pos, moves_tree->source->total_captures_so_far);
 
     list->head = cell;
-    printf("fail in begin exe2\n");
-
     while (moves_tree->source != NULL)
     {   
         //check where is the most jumps and go to that direction and add it to the list
@@ -267,11 +255,11 @@ SingleSourceMoveList *FindSingleSourceOptimalMove(SingleSourceMovesTree *moves_t
         cell = cell->next;
     }
 
-    printf("fail in end exe2\n");
     DeleteTreeNodes(moves_tree->source);
     free(moves_tree); //free tree
     return list;
 }
+
 
 
 SingleSourceMoveListCell *InitNewSingleSourceMoveList(checkersPos *pos, unsigned short captures)
@@ -311,6 +299,7 @@ void DeleteSingleSourceCell(SingleSourceMoveListCell * cell)
     
 }
 
+
 /**************exe 3****************/
 
 MultipleSourceMovesList *FindAllPossiblePlayerMoves(Board borad, Player player)  //TODO free all cell if aloc fail
@@ -336,7 +325,6 @@ MultipleSourceMovesList *FindAllPossiblePlayerMoves(Board borad, Player player) 
             {   
                 //find for this block the best move and add this move to the list
                 cell = InitNewMultipleSourceMovesListCell(FindSingleSourceOptimalMove(FindSingleSourceMoves(borad, &pos)));
-                printf("fail in exe 3\n");
                 if (list->head == NULL)
                 {
                     list->head = cell;
@@ -390,7 +378,6 @@ void DeleteMultipleSourceMovesListCell(MultipleSourceMovesListCell *cell)
 void Turn(Board board, Player player) //TODO: delete all moves after the play
 {
     MultipleSourceMovesList *list = FindAllPossiblePlayerMoves(board, player);
-    printf("fail in exe 4\n");
     unsigned short current_captures = 0;
     unsigned short max_captures = 0;
     MultipleSourceMovesListCell *multiple_move_cell = list->head;
@@ -420,10 +407,10 @@ void Turn(Board board, Player player) //TODO: delete all moves after the play
     printf("%c%d->",PosToChr(play->position), play->position->col);
     while (play->next != NULL)
     {
-        board[play->position->row][play->position->col] = '\0'; // '\0' for empty block
+        board[(int)play->position->row][(int)play->position->col] = '\0'; // '\0' for empty block
         play = play->next;
     }
-    board[play->position->row][play->position->col] = player;
+    board[(int)play->position->row][(int)play->position->col] = player;
     printf("%c%d\n",PosToChr(play->position), play->position->col);
 
 
@@ -434,13 +421,42 @@ void Turn(Board board, Player player) //TODO: delete all moves after the play
 
 void PlayGame(Board board, Player starting_player)
 {
+    char winner = 0;
+    while ((winner = CheckWin(board)) == 0)
+    {
     // print board, who`s turn, make the turn and print it, print the board again
-    PrintBoard(board);
-    printf("its %c turn\n", starting_player);
-    Turn(board, starting_player);
-    PrintBoard(board);
-    //TODO: insert this logic into a loop
+        PrintBoard(board);
+        printf("its %c turn\n", starting_player);
+        Turn(board, starting_player);
+        PrintBoard(board);
+    }
+
+    printf("player %c won the match\n", winner);
 }
+
+
+char CheckWin(Board board)
+{
+    for (int i = 0; i < BOARD_SIZE; i++)
+    {
+        if (board[0][i] == 'B')
+        {
+            return 'B';
+        }
+    }
+
+    for (int i = 0; i < BOARD_SIZE; i++)
+    {
+        if (board[BOARD_SIZE - 1][i] == 'T')
+        {
+            return 'T';
+        }
+    }
+//TODO: check win is not finish... need to check if there is pieces left on board
+    
+    return 0;
+}
+
 
 char PosToChr(checkersPos *pos)
 {
@@ -449,7 +465,7 @@ char PosToChr(checkersPos *pos)
     {
         LUT[i] = 'A' + i;
     }
-    return LUT[pos->row];
+    return LUT[(int)pos->row];
 }
 
 void InitializeBoard(Board board) 
@@ -502,7 +518,7 @@ void PrintBoard(Board board)
     printf(" +--+--+--+--+--+--+--+--+\n");
     for (int row = 0; row < BOARD_SIZE; row++) 
     {
-        printf("%d|", row);
+        printf("%c|", row + 'A');
         for (int col = 0; col < BOARD_SIZE; col++) 
         {
             if (board[row][col] == '\0') 
