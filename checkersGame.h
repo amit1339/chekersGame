@@ -34,12 +34,16 @@ typedef struct _SingleSourceMovesTree
 }SingleSourceMovesTree;
 
 SingleSourceMovesTree *FindSingleSourceMoves(Board board, checkersPos *src);
-void FillTreeLeftSideB(SingleSourceMovesTreeNode *src, Board borad, checkersPos *pos, Player oponnent);
-void FillTreeRightSideB(SingleSourceMovesTreeNode *src, Board borad, checkersPos *pos, Player oponnent);
-void FillTreeLeftSideT(SingleSourceMovesTreeNode *src, Board borad, checkersPos *pos, Player oponnent);
-void FillTreeRightSideT(SingleSourceMovesTreeNode *src, Board borad, checkersPos *pos, Player oponnent);
+void FillTreeLeftSideT(SingleSourceMovesTreeNode *src, Board board);
+void FillTreeRightSideT(SingleSourceMovesTreeNode *src, Board board);
+void FillTreeLeftSideB(SingleSourceMovesTreeNode *src, Board board);
+void FillTreeRightSideB(SingleSourceMovesTreeNode *src, Board board);
+
 SingleSourceMovesTreeNode *InitNewTreeNode(Board board, checkersPos *pos);
 void DeleteTreeNodes(SingleSourceMovesTreeNode *node);
+int RowToInt(char chr);
+int ColToInt(char chr);
+
 
 /***************exe 2***************/
 typedef struct _SingleSourceMoveListCell
@@ -58,6 +62,8 @@ typedef struct _SingleSourceMoveList
 SingleSourceMoveList *FindSingleSourceOptimalMove(SingleSourceMovesTree *moves_tree);
 SingleSourceMoveListCell *InitNewSingleSourceMoveList(checkersPos *pos, unsigned short captures);
 void DeleteSingleSourceCell(SingleSourceMoveListCell * cell);
+int Max(int a, int b);
+
 
 /**************exe 3****************/
 
@@ -88,7 +94,7 @@ void PlayGame(Board board, Player starting_player);
 char CheckWin(Board board);
 
 /**************utils****************/
-char PosToChr(checkersPos *pos);
+
 void InitializeBoard(Board board);
 void PrintBoard(Board board);
 
