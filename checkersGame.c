@@ -1,7 +1,7 @@
 #include "checkersGame.h"
 
 
-
+//Ariel Vaknin
 /*exe 1*/
 
 SingleSourceMovesTree* FindSingleSourceMoves(Board board, checkersPos* src)
