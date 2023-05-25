@@ -70,48 +70,51 @@ void FillTreeLeftSideT(SingleSourceMovesTreeNode* src, Board board)
     if (src == NULL)
         return;
 
-        if (IsValid(src->pos->row + 1, src->pos->col - 1) == true)
+    if (IsValid(src->pos->row + 1, src->pos->col - 1) == true)
+    {
+        if (IsValid(src->pos->row + 2, src->pos->col - 2) && (board[RowToInt(src->pos->row) + 1][ColToInt(src->pos->col) - 1] == 'B' && board[RowToInt(src->pos->row) + 2][ColToInt(src->pos->col) - 2] == '\0'))
         {
-            if (IsValid(src->pos->row + 2, src->pos->col - 2)&&(board[RowToInt(src->pos->row) + 1][ColToInt(src->pos->col) - 1] == 'B' && board[RowToInt(src->pos->row) + 2][ColToInt(src->pos->col) - 2] == '\0'))
+            checkersPos pos = { src->pos->row + 2, src->pos->col - 2 };
+            src->next_move[LEFT] = InitNewTreeNode(board, &pos);
+            if (src->next_move[LEFT] == NULL)
             {
-                checkersPos pos = { src->pos->row + 2, src->pos->col - 2 };
-                src->next_move[LEFT] = InitNewTreeNode(board, &pos);
-                if (src->next_move[LEFT] == NULL)
-                {
-                    DeleteTreeNodes(src);
-                    return;
-                }
-                src->total_captures_so_far += 1;
-
-                FillTreeLeftSideT(src->next_move[LEFT], board);
-                FillTreeRightSideT(src->next_move[RIGHT], board);
-                if (src->next_move[LEFT] == NULL)
-                {
-                    src->total_captures_so_far += src->next_move[RIGHT]->total_captures_so_far;
-                }
-
-                else if (src->next_move[RIGHT] == NULL)
-                {
-                    src->total_captures_so_far += src->next_move[LEFT]->total_captures_so_far;
-                }
-
-                else
-                {
-                    src->total_captures_so_far += Max(src->next_move[LEFT]->total_captures_so_far, src->next_move[RIGHT]->total_captures_so_far);
-                }
+                DeleteTreeNodes(src);
+                return;
             }
-            else if (board[RowToInt(src->pos->row) + 1][ColToInt(src->pos->col) - 1] == '\0' && src->total_captures_so_far == 0)
+            src->total_captures_so_far += 1;
+
+            FillTreeLeftSideT(src->next_move[LEFT], board);
+            FillTreeRightSideT(src->next_move[RIGHT], board);
+            if (src->next_move[LEFT] == NULL)
             {
-                checkersPos pos = { src->pos->row + 1, src->pos->col - 1 };
-
-                src->next_move[LEFT] = InitNewTreeNode(board, &pos);
-                if (src->next_move[LEFT] == NULL)
-                {
-                    DeleteTreeNodes(src);
-                    return;
-                }
+                src->total_captures_so_far += src->next_move[RIGHT]->total_captures_so_far;
             }
+
+            else if (src->next_move[RIGHT] == NULL)
+            {
+                src->total_captures_so_far += src->next_move[LEFT]->total_captures_so_far;
+            }
+
+            else
+            {
+                src->total_captures_so_far += Max(src->next_move[LEFT]->total_captures_so_far, src->next_move[RIGHT]->total_captures_so_far);
+            }
+            return;
         }
+        else if (board[RowToInt(src->pos->row) + 1][ColToInt(src->pos->col) - 1] == '\0' && src->total_captures_so_far == 0)
+        {
+            checkersPos pos = { src->pos->row + 1, src->pos->col - 1 };
+
+            src->next_move[LEFT] = InitNewTreeNode(board, &pos);
+            if (src->next_move[LEFT] == NULL)
+            {
+                DeleteTreeNodes(src);
+                return;
+            }
+            return;
+        }
+        //src->next_move[LEFT] = NULL;
+    }
 }
 
 void FillTreeRightSideT(SingleSourceMovesTreeNode* src, Board board)
@@ -120,7 +123,7 @@ void FillTreeRightSideT(SingleSourceMovesTreeNode* src, Board board)
         return;
     if (IsValid(src->pos->row + 1, src->pos->col + 1) == true)
     {
-        if (IsValid(src->pos->row + 2, src->pos->col + 2)&&(board[RowToInt(src->pos->row) + 1][ColToInt(src->pos->col) + 1] == 'B' && board[RowToInt(src->pos->row) + 2][ColToInt(src->pos->col) + 2] == '\0'))
+        if (IsValid(src->pos->row + 2, src->pos->col + 2) && (board[RowToInt(src->pos->row) + 1][ColToInt(src->pos->col) + 1] == 'B' && board[RowToInt(src->pos->row) + 2][ColToInt(src->pos->col) + 2] == '\0'))
         {
             checkersPos pos = { src->pos->row + 2, src->pos->col + 2 };
             src->next_move[RIGHT] = InitNewTreeNode(board, &pos);
@@ -147,6 +150,7 @@ void FillTreeRightSideT(SingleSourceMovesTreeNode* src, Board board)
             {
                 src->total_captures_so_far += Max(src->next_move[LEFT]->total_captures_so_far, src->next_move[RIGHT]->total_captures_so_far);
             }
+            return;
         }
         else if (board[RowToInt(src->pos->row) + 1][ColToInt(src->pos->col) + 1] == '\0' && src->total_captures_so_far == 0)
         {
@@ -158,7 +162,9 @@ void FillTreeRightSideT(SingleSourceMovesTreeNode* src, Board board)
                 DeleteTreeNodes(src);
                 return;
             }
+            return;
         }
+        //src->next_move[RIGHT] = NULL;
     }
 }
 
@@ -168,7 +174,7 @@ void FillTreeLeftSideB(SingleSourceMovesTreeNode* src, Board board)
         return;
     if (IsValid(src->pos->row - 1, src->pos->col - 1) == true)
     {
-        if(IsValid(src->pos->row - 2,src->pos->col - 2)&&(board[RowToInt(src->pos->row) - 1][ColToInt(src->pos->col) - 1] == 'T' && board[RowToInt(src->pos->row) - 2][ColToInt(src->pos->col) - 2] == '\0'))
+        if (IsValid(src->pos->row - 2, src->pos->col - 2) && (board[RowToInt(src->pos->row) - 1][ColToInt(src->pos->col) - 1] == 'T' && board[RowToInt(src->pos->row) - 2][ColToInt(src->pos->col) - 2] == '\0'))
         {
             checkersPos pos = { src->pos->row - 2, src->pos->col - 2 };
             src->next_move[LEFT] = InitNewTreeNode(board, &pos);
@@ -195,7 +201,7 @@ void FillTreeLeftSideB(SingleSourceMovesTreeNode* src, Board board)
             {
                 src->total_captures_so_far += Max(src->next_move[LEFT]->total_captures_so_far, src->next_move[RIGHT]->total_captures_so_far);
             }
-
+            return;
         }
         else if (board[RowToInt(src->pos->row) - 1][ColToInt(src->pos->col) - 1] == '\0' && src->total_captures_so_far == 0)
         {
@@ -207,7 +213,9 @@ void FillTreeLeftSideB(SingleSourceMovesTreeNode* src, Board board)
                 DeleteTreeNodes(src);
                 return;
             }
+            return;
         }
+        //src->next_move[LEFT] = NULL;
     }
 }
 
@@ -244,6 +252,7 @@ void FillTreeRightSideB(SingleSourceMovesTreeNode* src, Board board)
             {
                 src->total_captures_so_far += Max(src->next_move[LEFT]->total_captures_so_far, src->next_move[RIGHT]->total_captures_so_far);
             }
+            return;
         }
         else if (board[RowToInt(src->pos->row) - 1][ColToInt(src->pos->col) + 1] == '\0' && src->total_captures_so_far == 0)
         {
@@ -255,19 +264,21 @@ void FillTreeRightSideB(SingleSourceMovesTreeNode* src, Board board)
                 DeleteTreeNodes(src);
                 return;
             }
+            return;
         }
+        //src->next_move[RIGHT] = NULL;
     }
 }
 
 SingleSourceMovesTreeNode* InitNewTreeNode(Board board, checkersPos* pos)
 {
-    SingleSourceMovesTreeNode* node = (SingleSourceMovesTreeNode*)malloc(sizeof(SingleSourceMovesTreeNode));
+    SingleSourceMovesTreeNode* node = (SingleSourceMovesTreeNode*)calloc(1,sizeof(SingleSourceMovesTreeNode));
     if (node == NULL)
     {
         return NULL;
     }
 
-    node->pos = (checkersPos*)malloc(sizeof(checkersPos));
+    node->pos = (checkersPos*)calloc(1,sizeof(checkersPos));
     if (node->pos == NULL)
     {
         free(node);
@@ -536,12 +547,7 @@ void Turn(Board board, Player player) //TODO: delete all moves after the play
     while (multiple_move_cell != NULL)
     {
         //finding the best play to do
-        single_move_cell = multiple_move_cell->single_source_moves_list->head;
-        while (single_move_cell != NULL)
-        {
-            current_captures = single_move_cell->captures;
-            single_move_cell = single_move_cell->next;
-        }
+        current_captures = multiple_move_cell->single_source_moves_list->head->captures;
 
         if (current_captures >= max_captures)
         {
@@ -571,24 +577,24 @@ void Turn(Board board, Player player) //TODO: delete all moves after the play
 void PlayGame(Board board, Player starting_player)
 {
     char winner = 0;
-    //while ((winner = CheckWin(board)) == 0)
-    //{
-        // print board, who`s turn, make the turn and print it, print the board again
-        PrintBoard(board);
-        printf("its %c turn\n", starting_player);
-        Turn(board, starting_player);
-        PrintBoard(board);
-        printf(" END OF TURN\n");
-        if (starting_player == 'T')
-        {
-            starting_player = 'B';
-        }
-        else
-        {
-            starting_player = 'T';
-        }
+    while ((winner = CheckWin(board)) == 0)
+    {
+     // print board, who`s turn, make the turn and print it, print the board again
+    PrintBoard(board);
+    printf("its %c turn\n", starting_player);
+    Turn(board, starting_player);
+    PrintBoard(board);
+    printf(" END OF TURN\n");
+    if (starting_player == 'T')
+    {
+        starting_player = 'B';
+    }
+    else
+    {
+        starting_player = 'T';
+    }
 
-    //}
+    }
 
     printf("player %c won the match\n", winner);
 }
