@@ -63,7 +63,7 @@ SingleSourceMoveList *FindSingleSourceOptimalMove(SingleSourceMovesTree *moves_t
 SingleSourceMoveListCell *InitNewSingleSourceMoveList(checkersPos *pos, unsigned short captures);
 void DeleteSingleSourceCell(SingleSourceMoveListCell * cell);
 int Max(int a, int b);
-
+SingleSourceMoveListCell *Move(SingleSourceMovesTreeNode *node, SingleSourceMoveList *list);
 
 /**************exe 3****************/
 

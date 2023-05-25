@@ -27,12 +27,9 @@ SingleSourceMovesTree *FindSingleSourceMoves(Board board, checkersPos *src)
             FillTreeLeftSideB(source, board);
             FillTreeRightSideB(source, board);
             break;
-        default:
-            DeleteTreeNodes(source);  // Clean up the tree if the source is invalid
-            return NULL;
     }
-    
-    if (source->next_move[LEFT] == NULL || source->next_move[RIGHT] == NULL)
+
+    if (source != NULL && source->next_move[LEFT] == NULL || source->next_move[RIGHT] == NULL)
     {
         DeleteTreeNodes(source);
         return NULL;
@@ -79,7 +76,20 @@ void FillTreeLeftSideT(SingleSourceMovesTreeNode *src, Board board)
 
             FillTreeLeftSideT(src->next_move[LEFT], board);
             FillTreeRightSideT(src->next_move[RIGHT], board);
-            src->total_captures_so_far += Max(src->next_move[LEFT]->total_captures_so_far, src->next_move[RIGHT]->total_captures_so_far);
+            if (src->next_move[LEFT] == NULL)
+            {
+                src->total_captures_so_far += src->next_move[RIGHT]->total_captures_so_far;
+            }
+
+            else if (src->next_move[RIGHT] == NULL)
+            {
+                src->total_captures_so_far += src->next_move[LEFT]->total_captures_so_far;
+            }
+            
+            else
+            {
+               src->total_captures_so_far += Max(src->next_move[LEFT]->total_captures_so_far, src->next_move[RIGHT]->total_captures_so_far);
+            }
         }
         else if (board[RowToInt(src->pos->row)+ 1][ColToInt(src->pos->col) - 1] == '\0' && src->total_captures_so_far == 0)
         {
@@ -112,7 +122,20 @@ void FillTreeRightSideT(SingleSourceMovesTreeNode *src, Board board)
 
             FillTreeLeftSideT(src->next_move[LEFT], board);
             FillTreeRightSideT(src->next_move[RIGHT], board);
-            src->total_captures_so_far += Max(src->next_move[LEFT]->total_captures_so_far, src->next_move[RIGHT]->total_captures_so_far);
+            if (src->next_move[LEFT] == NULL)
+            {
+                src->total_captures_so_far += src->next_move[RIGHT]->total_captures_so_far;
+            }
+
+            else if (src->next_move[RIGHT] == NULL)
+            {
+                src->total_captures_so_far += src->next_move[LEFT]->total_captures_so_far;
+            }
+            
+            else
+            {
+               src->total_captures_so_far += Max(src->next_move[LEFT]->total_captures_so_far, src->next_move[RIGHT]->total_captures_so_far);
+            }
         }
         else if (board[RowToInt(src->pos->row)+ 1][ColToInt(src->pos->col) + 1] == '\0' && src->total_captures_so_far == 0)
         {
@@ -145,7 +168,21 @@ void FillTreeLeftSideB(SingleSourceMovesTreeNode *src, Board board)
 
             FillTreeLeftSideB(src->next_move[LEFT], board);
             FillTreeRightSideB(src->next_move[RIGHT], board);
-            src->total_captures_so_far += Max(src->next_move[LEFT]->total_captures_so_far, src->next_move[RIGHT]->total_captures_so_far);
+            if (src->next_move[LEFT] == NULL)
+            {
+                src->total_captures_so_far += src->next_move[RIGHT]->total_captures_so_far;
+            }
+
+            else if (src->next_move[RIGHT] == NULL)
+            {
+                src->total_captures_so_far += src->next_move[LEFT]->total_captures_so_far;
+            }
+            
+            else
+            {
+               src->total_captures_so_far += Max(src->next_move[LEFT]->total_captures_so_far, src->next_move[RIGHT]->total_captures_so_far);
+            }
+            
         }
         else if (board[RowToInt(src->pos->row) - 1][ColToInt(src->pos->col) - 1] == '\0' && src->total_captures_so_far == 0)
         {
@@ -163,7 +200,7 @@ void FillTreeLeftSideB(SingleSourceMovesTreeNode *src, Board board)
 
 void FillTreeRightSideB(SingleSourceMovesTreeNode *src, Board board) 
 {
-    if (RowToInt(src->pos->row) - 1 >= 0 && ColToInt(src->pos->col) + 1 < BOARD_SIZE)
+    if (src != NULL && RowToInt(src->pos->row) - 1 >= 0 && ColToInt(src->pos->col) + 1 < BOARD_SIZE)
     {
         if (RowToInt(src->pos->row) - 2 < BOARD_SIZE && ColToInt(src->pos->col) + 2 < BOARD_SIZE && (board[RowToInt(src->pos->row) - 1][ColToInt(src->pos->col) + 1] == 'T' && board[RowToInt(src->pos->row) - 2][ColToInt(src->pos->col) + 2] == '\0'))
         {   
@@ -178,7 +215,20 @@ void FillTreeRightSideB(SingleSourceMovesTreeNode *src, Board board)
 
             FillTreeLeftSideB(src->next_move[LEFT], board);
             FillTreeRightSideB(src->next_move[RIGHT], board);
-            src->total_captures_so_far += Max(src->next_move[LEFT]->total_captures_so_far, src->next_move[RIGHT]->total_captures_so_far);
+            if (src->next_move[LEFT] == NULL)
+            {
+                src->total_captures_so_far += src->next_move[RIGHT]->total_captures_so_far;
+            }
+
+            else if (src->next_move[RIGHT] == NULL)
+            {
+                src->total_captures_so_far += src->next_move[LEFT]->total_captures_so_far;
+            }
+            
+            else
+            {
+               src->total_captures_so_far += Max(src->next_move[LEFT]->total_captures_so_far, src->next_move[RIGHT]->total_captures_so_far);
+            }
         }
         else if (board[RowToInt(src->pos->row) - 1][ColToInt(src->pos->col) + 1] == '\0' && src->total_captures_so_far == 0)
         {
@@ -264,24 +314,12 @@ SingleSourceMoveList *FindSingleSourceOptimalMove(SingleSourceMovesTree *moves_t
 
         if (moves_tree->source->next_move[RIGHT] == NULL)
         {
-            cell->next = InitNewSingleSourceMoveList(moves_tree->source->next_move[LEFT]->pos, moves_tree->source->next_move[LEFT]->total_captures_so_far);
-            if (cell->next == NULL)
-            {
-                DeleteSingleSourceCell(list->head);
-                free(list);
-                return NULL;
-            }
+            cell->next = Move(moves_tree->source->next_move[LEFT], list);
             moves_tree->source = moves_tree->source->next_move[LEFT];
         }
         else if (moves_tree->source->next_move[LEFT] == NULL)
         {
-            cell->next = InitNewSingleSourceMoveList(moves_tree->source->next_move[RIGHT]->pos, moves_tree->source->next_move[RIGHT]->total_captures_so_far);
-            if (cell->next == NULL)
-            {
-                DeleteSingleSourceCell(list->head);
-                free(list);
-                return NULL;
-            }
+            cell->next = Move(moves_tree->source->next_move[RIGHT], list);
             moves_tree->source = moves_tree->source->next_move[RIGHT];
         }
         else
@@ -289,25 +327,28 @@ SingleSourceMoveList *FindSingleSourceOptimalMove(SingleSourceMovesTree *moves_t
             if (moves_tree->source->next_move[LEFT]->total_captures_so_far >
                 moves_tree->source->next_move[RIGHT]->total_captures_so_far)
             {
-                cell->next = InitNewSingleSourceMoveList(moves_tree->source->next_move[LEFT]->pos, moves_tree->source->next_move[LEFT]->total_captures_so_far);
-                if (cell->next == NULL)
-                {
-                    DeleteSingleSourceCell(list->head);
-                    free(list);
-                    return NULL;
-                }
+                cell->next = Move(moves_tree->source->next_move[LEFT], list);
                 moves_tree->source = moves_tree->source->next_move[LEFT];
+            }
+            else if(moves_tree->source->next_move[LEFT]->total_captures_so_far <
+                moves_tree->source->next_move[RIGHT]->total_captures_so_far)
+            {
+                cell->next = Move(moves_tree->source->next_move[RIGHT], list);
+                moves_tree->source = moves_tree->source->next_move[RIGHT];
             }
             else
             {
-                cell->next = InitNewSingleSourceMoveList(moves_tree->source->next_move[RIGHT]->pos, moves_tree->source->next_move[RIGHT]->total_captures_so_far);
-                if (cell->next == NULL)
+                if (moves_tree->source->board[RowToInt(moves_tree->source->pos->row)][ColToInt(moves_tree->source->pos->col)] == 'T')
                 {
-                    DeleteSingleSourceCell(list->head);
-                    free(list);
-                    return NULL;
+                    cell->next = Move(moves_tree->source->next_move[RIGHT], list);
+                    moves_tree->source = moves_tree->source->next_move[RIGHT];
                 }
-                moves_tree->source = moves_tree->source->next_move[RIGHT];
+                else
+                {
+                    cell->next = Move(moves_tree->source->next_move[LEFT], list);
+                    moves_tree->source = moves_tree->source->next_move[LEFT];
+                }
+                
             }
         }
 
@@ -319,6 +360,19 @@ SingleSourceMoveList *FindSingleSourceOptimalMove(SingleSourceMovesTree *moves_t
     free(moves_tree);
     return list;
 }
+
+SingleSourceMoveListCell *Move(SingleSourceMovesTreeNode *node, SingleSourceMoveList *list)
+{
+    SingleSourceMoveListCell *cell = InitNewSingleSourceMoveList(node->pos, node->total_captures_so_far);
+    if (cell == NULL)
+    {
+        DeleteSingleSourceCell(list->head);
+        free(list);
+        return NULL;
+    }
+    return cell;
+}
+
 
 int Max(int a, int b)
 {
@@ -359,7 +413,6 @@ void DeleteSingleSourceCell(SingleSourceMoveListCell *cell)
         cell = next;
     }
 }
-
 
 
 /**************exe 3****************/
