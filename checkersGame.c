@@ -328,64 +328,72 @@ SingleSourceMoveList* FindSingleSourceOptimalMove(SingleSourceMovesTree* moves_t
         return NULL;
     }
 
-    SingleSourceMoveListCell* cell = InitNewSingleSourceMoveList(moves_tree->source->pos, moves_tree->source->total_captures_so_far);
-    list->head = cell;
+    SingleSourceMoveListCell* currentCell = InitNewSingleSourceMoveList(moves_tree->source->pos, moves_tree->source->total_captures_so_far);
+    list->head = currentCell;
 
     while (moves_tree->source != NULL)
     {
-        if (moves_tree->source->next_move[RIGHT] == NULL && moves_tree->source->next_move[LEFT] == NULL)
+        SingleSourceMovesTreeNode* leftMove = moves_tree->source->next_move[LEFT];
+        SingleSourceMovesTreeNode* rightMove = moves_tree->source->next_move[RIGHT];
+
+        if (leftMove == NULL && rightMove == NULL)
         {
             break;
         }
 
-        if (moves_tree->source->next_move[RIGHT] == NULL)
+        if (leftMove == NULL)
         {
-            cell->next = Move(moves_tree->source->next_move[LEFT], list);
-            moves_tree->source = moves_tree->source->next_move[LEFT];
+            currentCell->next = Move(rightMove, list);
+            moves_tree->source = rightMove;
         }
-        else if (moves_tree->source->next_move[LEFT] == NULL)
+        else if (rightMove == NULL)
         {
-            cell->next = Move(moves_tree->source->next_move[RIGHT], list);
-            moves_tree->source = moves_tree->source->next_move[RIGHT];
+            currentCell->next = Move(leftMove, list);
+            moves_tree->source = leftMove;
         }
         else
         {
-            if (moves_tree->source->next_move[LEFT]->total_captures_so_far >
-                moves_tree->source->next_move[RIGHT]->total_captures_so_far)
+            int leftCaptures = leftMove->total_captures_so_far;
+            int rightCaptures = rightMove->total_captures_so_far;
+
+            if (leftCaptures > rightCaptures)
             {
-                cell->next = Move(moves_tree->source->next_move[LEFT], list);
-                moves_tree->source = moves_tree->source->next_move[LEFT];
+                currentCell->next = Move(leftMove, list);
+                moves_tree->source = leftMove;
             }
-            else if (moves_tree->source->next_move[LEFT]->total_captures_so_far <
-                moves_tree->source->next_move[RIGHT]->total_captures_so_far)
+            else if (leftCaptures < rightCaptures)
             {
-                cell->next = Move(moves_tree->source->next_move[RIGHT], list);
-                moves_tree->source = moves_tree->source->next_move[RIGHT];
+                currentCell->next = Move(rightMove, list);
+                moves_tree->source = rightMove;
             }
             else
             {
-                if (moves_tree->source->board[RowToInt(moves_tree->source->pos->row)][ColToInt(moves_tree->source->pos->col)] == 'T')
+                int leftRow = moves_tree->source->next_move[LEFT]->pos->row;
+                int rightRow = moves_tree->source->next_move[RIGHT]->pos->row;
+
+                if ((moves_tree->source->board[RowToInt(moves_tree->source->pos->row)][ColToInt(moves_tree->source->pos->col)] == 'T' && leftRow > rightRow) ||
+                    (moves_tree->source->board[RowToInt(moves_tree->source->pos->row)][ColToInt(moves_tree->source->pos->col)] != 'T' && leftRow < rightRow))
                 {
-                    cell->next = Move(moves_tree->source->next_move[RIGHT], list);
-                    moves_tree->source = moves_tree->source->next_move[RIGHT];
+                    currentCell->next = Move(leftMove, list);
+                    moves_tree->source = leftMove;
                 }
                 else
                 {
-                    cell->next = Move(moves_tree->source->next_move[LEFT], list);
-                    moves_tree->source = moves_tree->source->next_move[LEFT];
+                    currentCell->next = Move(rightMove, list);
+                    moves_tree->source = rightMove;
                 }
-
             }
         }
 
-        cell = cell->next;
+        currentCell = currentCell->next;
     }
 
-    list->tail = cell;
+    list->tail = currentCell;
     DeleteTreeNodes(moves_tree->source);
     free(moves_tree);
     return list;
 }
+
 
 SingleSourceMoveListCell* Move(SingleSourceMovesTreeNode* node, SingleSourceMoveList* list)
 {
