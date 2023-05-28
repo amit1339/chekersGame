@@ -1,7 +1,6 @@
 #include "checkersGame.h"
 
-
-//Ariel Vaknin
+BestMove best_move = {0};
 /*exe 1*/
 
 SingleSourceMovesTree* FindSingleSourceMoves(Board board, checkersPos* src)
@@ -508,6 +507,12 @@ void Turn(Board board, Player player) //TODO: delete all moves after the play
         multiple_move_cell = multiple_move_cell->next;
     }
 
+    if (best_move.num_of_captures < max_captures)
+    {
+        best_move.num_of_captures = max_captures;
+        best_move.player = player;
+    }
+
     //make the play
 
     printf("%c%c->", play->position->row, play->position->col);
@@ -541,6 +546,7 @@ void Turn(Board board, Player player) //TODO: delete all moves after the play
 void PlayGame(Board board, Player starting_player)
 {
     char winner = 0;
+    int num_of_moves = 0;
     while ((winner = CheckWin(board)) == 0)
     {
      // print board, who`s turn, make the turn and print it, print the board again
@@ -552,6 +558,7 @@ void PlayGame(Board board, Player starting_player)
     if (starting_player == 'T')
     {
         starting_player = 'B';
+        ++num_of_moves;
     }
     else
     {
@@ -560,7 +567,9 @@ void PlayGame(Board board, Player starting_player)
 
     }
 
-    printf("player %c won the match\n", winner);
+    printf("%c wins\n", winner);
+    printf("%c preformed %d moves\n", winner, num_of_moves);
+    printf("%c preformed the highest number of captures in a single move - %d\n", best_move.player, best_move.num_of_captures);
 }
 
 

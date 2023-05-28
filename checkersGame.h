@@ -98,5 +98,12 @@ char CheckWin(Board board);
 void InitializeBoard(Board board);
 void PrintBoard(Board board);
 int IsValid(char posrow, char poscol);
+typedef struct _BestMove
+{
+    char player;
+    unsigned short num_of_captures;
+} BestMove;
+
+
 
 #endif // __CHECKERSGAME_H__
