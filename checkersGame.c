@@ -99,7 +99,6 @@ void FillTreeLeftSideT(SingleSourceMovesTreeNode* src, Board board, unsigned sho
             }
             return;
         }
-        //src->next_move[LEFT] = NULL;
     }
 }
 
@@ -137,7 +136,6 @@ void FillTreeRightSideT(SingleSourceMovesTreeNode* src, Board board, unsigned sh
             }
             return;
         }
-        //src->next_move[RIGHT] = NULL;
     }
 }
 
@@ -174,7 +172,6 @@ void FillTreeLeftSideB(SingleSourceMovesTreeNode* src, Board board, unsigned sho
             }
             return;
         }
-        //src->next_move[LEFT] = NULL;
     }
 }
 
@@ -212,7 +209,6 @@ void FillTreeRightSideB(SingleSourceMovesTreeNode* src, Board board, unsigned sh
             }
             return;
         }
-        //src->next_move[RIGHT] = NULL;
     }
 }
 
@@ -258,7 +254,7 @@ void DeleteTreeNodes(SingleSourceMovesTreeNode* node)
 
     free(node->pos);
     node->pos = NULL;
-    //free(node); //TODO: memory prob
+    free(node); 
 }
 
 
@@ -430,7 +426,7 @@ MultipleSourceMovesList* FindAllPossiblePlayerMoves(Board board, Player player)
                 {
                     continue;
                 }
-
+                
                 cell = InitNewMultipleSourceMovesListCell(list_single);
                 if (cell == NULL)
                 {
@@ -478,6 +474,9 @@ void DeleteMultipleSourceMovesListCell(MultipleSourceMovesListCell* cell)
     while (cell != NULL)
     {
         next = cell->next;
+        DeleteSingleSourceCell(cell->single_source_moves_list->head);
+        free(cell->single_source_moves_list);
+        cell->single_source_moves_list = NULL;
         free(cell);
         cell = next;
     }
@@ -513,13 +512,26 @@ void Turn(Board board, Player player) //TODO: delete all moves after the play
     printf("%c%c->", play->position->row, play->position->col);
     while (play->next != NULL)
     {
+        //delete from right
+        if (play->next->position->row == play->position->row + 2)
+        {
+            board[RowToInt(play->position->row) + 1][ColToInt(play->position->col) + 1] = '\0'; 
+        }
+
+        //delete from left
+        else if (play->next->position->row == play->position->row - 2)
+        {
+            board[RowToInt(play->position->row) - 1][ColToInt(play->position->col) + 1] = '\0';   
+        }
+        
         board[RowToInt(play->position->row)][ColToInt(play->position->col)] = '\0'; // '\0' for empty block
         play = play->next;
     }
     board[RowToInt(play->position->row)][ColToInt(play->position->col)] = player;
     printf("%c%c\n", play->position->row, play->position->col);
 
-
+    DeleteMultipleSourceMovesListCell(list->head);
+    free(list);
 }
 
 
