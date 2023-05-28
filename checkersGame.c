@@ -20,12 +20,12 @@ SingleSourceMovesTree* FindSingleSourceMoves(Board board, checkersPos* src)
     switch (board[RowToInt(src->row)][ColToInt(src->col)])
     {
     case 'T': //bottom to top movement
-        FillTreeLeftSideT(source, board);
-        FillTreeRightSideT(source, board);
+        FillTreeLeftSideT(source, board, 0);
+        FillTreeRightSideT(source, board, 0);
         break;
     case 'B': //top to bottom movement
-        FillTreeLeftSideB(source, board);
-        FillTreeRightSideB(source, board);
+        FillTreeLeftSideB(source, board, 0);
+        FillTreeRightSideB(source, board, 0);
         break;
     }
 
@@ -65,7 +65,7 @@ int IsValid(char posrow, char poscol)
 }
 
 
-void FillTreeLeftSideT(SingleSourceMovesTreeNode* src, Board board)
+void FillTreeLeftSideT(SingleSourceMovesTreeNode* src, Board board, unsigned short lvl)
 {
     if (src == NULL)
         return;
@@ -81,27 +81,13 @@ void FillTreeLeftSideT(SingleSourceMovesTreeNode* src, Board board)
                 DeleteTreeNodes(src);
                 return;
             }
-            src->total_captures_so_far += 1;
+            src->next_move[LEFT]->total_captures_so_far = lvl + 1;
 
-            FillTreeLeftSideT(src->next_move[LEFT], board);
-            FillTreeRightSideT(src->next_move[RIGHT], board);
-            if (src->next_move[LEFT] == NULL)
-            {
-                src->total_captures_so_far += src->next_move[RIGHT]->total_captures_so_far;
-            }
+            FillTreeLeftSideT(src->next_move[LEFT], board, lvl + 1);
+            FillTreeRightSideT(src->next_move[RIGHT], board, lvl + 1);
 
-            else if (src->next_move[RIGHT] == NULL)
-            {
-                src->total_captures_so_far += src->next_move[LEFT]->total_captures_so_far;
-            }
-
-            else
-            {
-                src->total_captures_so_far += Max(src->next_move[LEFT]->total_captures_so_far, src->next_move[RIGHT]->total_captures_so_far);
-            }
-            return;
         }
-        else if (board[RowToInt(src->pos->row) + 1][ColToInt(src->pos->col) - 1] == '\0' && src->total_captures_so_far == 0)
+        else if (board[RowToInt(src->pos->row) + 1][ColToInt(src->pos->col) - 1] == '\0' && lvl == 0)
         {
             checkersPos pos = { src->pos->row + 1, src->pos->col - 1 };
 
@@ -117,7 +103,7 @@ void FillTreeLeftSideT(SingleSourceMovesTreeNode* src, Board board)
     }
 }
 
-void FillTreeRightSideT(SingleSourceMovesTreeNode* src, Board board)
+void FillTreeRightSideT(SingleSourceMovesTreeNode* src, Board board, unsigned short lvl)
 {
     if (src == NULL)
         return;
@@ -132,27 +118,14 @@ void FillTreeRightSideT(SingleSourceMovesTreeNode* src, Board board)
                 DeleteTreeNodes(src);
                 return;
             }
-            src->total_captures_so_far += 1;
+            src->next_move[RIGHT]->total_captures_so_far = lvl + 1;
 
-            FillTreeLeftSideT(src->next_move[LEFT], board);
-            FillTreeRightSideT(src->next_move[RIGHT], board);
-            if (src->next_move[LEFT] == NULL)
-            {
-                src->total_captures_so_far += src->next_move[RIGHT]->total_captures_so_far;
-            }
-
-            else if (src->next_move[RIGHT] == NULL)
-            {
-                src->total_captures_so_far += src->next_move[LEFT]->total_captures_so_far;
-            }
-
-            else
-            {
-                src->total_captures_so_far += Max(src->next_move[LEFT]->total_captures_so_far, src->next_move[RIGHT]->total_captures_so_far);
-            }
+            FillTreeLeftSideT(src->next_move[LEFT], board, lvl + 1);
+            FillTreeRightSideT(src->next_move[RIGHT], board, lvl + 1);
             return;
         }
-        else if (board[RowToInt(src->pos->row) + 1][ColToInt(src->pos->col) + 1] == '\0' && src->total_captures_so_far == 0)
+
+        else if (board[RowToInt(src->pos->row) + 1][ColToInt(src->pos->col) + 1] == '\0' && lvl == 0)
         {
             checkersPos pos = { src->pos->row + 1, src->pos->col + 1 };
 
@@ -168,7 +141,7 @@ void FillTreeRightSideT(SingleSourceMovesTreeNode* src, Board board)
     }
 }
 
-void FillTreeLeftSideB(SingleSourceMovesTreeNode* src, Board board)
+void FillTreeLeftSideB(SingleSourceMovesTreeNode* src, Board board, unsigned short lvl)
 {
     if (src == NULL)
         return;
@@ -183,27 +156,13 @@ void FillTreeLeftSideB(SingleSourceMovesTreeNode* src, Board board)
                 DeleteTreeNodes(src);
                 return;
             }
-            src->total_captures_so_far += 1;
+            src->next_move[LEFT]->total_captures_so_far = lvl + 1;
 
-            FillTreeLeftSideB(src->next_move[LEFT], board);
-            FillTreeRightSideB(src->next_move[RIGHT], board);
-            if (src->next_move[LEFT] == NULL)
-            {
-                src->total_captures_so_far += src->next_move[RIGHT]->total_captures_so_far;
-            }
-
-            else if (src->next_move[RIGHT] == NULL)
-            {
-                src->total_captures_so_far += src->next_move[LEFT]->total_captures_so_far;
-            }
-
-            else
-            {
-                src->total_captures_so_far += Max(src->next_move[LEFT]->total_captures_so_far, src->next_move[RIGHT]->total_captures_so_far);
-            }
+            FillTreeLeftSideB(src->next_move[LEFT], board, lvl + 1);
+            FillTreeRightSideB(src->next_move[RIGHT], board, lvl + 1);
             return;
         }
-        else if (board[RowToInt(src->pos->row) - 1][ColToInt(src->pos->col) - 1] == '\0' && src->total_captures_so_far == 0)
+        else if (board[RowToInt(src->pos->row) - 1][ColToInt(src->pos->col) - 1] == '\0' && lvl == 0)
         {
             checkersPos pos = { src->pos->row - 1, src->pos->col - 1 };
 
@@ -219,7 +178,7 @@ void FillTreeLeftSideB(SingleSourceMovesTreeNode* src, Board board)
     }
 }
 
-void FillTreeRightSideB(SingleSourceMovesTreeNode* src, Board board)
+void FillTreeRightSideB(SingleSourceMovesTreeNode* src, Board board, unsigned short lvl)
 {
     if (src == NULL)
         return;
@@ -234,27 +193,14 @@ void FillTreeRightSideB(SingleSourceMovesTreeNode* src, Board board)
                 DeleteTreeNodes(src);
                 return;
             }
-            src->total_captures_so_far += 1;
+            src->next_move[RIGHT]->total_captures_so_far = lvl + 1;
 
-            FillTreeLeftSideB(src->next_move[LEFT], board);
-            FillTreeRightSideB(src->next_move[RIGHT], board);
-            if (src->next_move[LEFT] == NULL)
-            {
-                src->total_captures_so_far += src->next_move[RIGHT]->total_captures_so_far;
-            }
-
-            else if (src->next_move[RIGHT] == NULL)
-            {
-                src->total_captures_so_far += src->next_move[LEFT]->total_captures_so_far;
-            }
-
-            else
-            {
-                src->total_captures_so_far += Max(src->next_move[LEFT]->total_captures_so_far, src->next_move[RIGHT]->total_captures_so_far);
-            }
+            FillTreeLeftSideB(src->next_move[LEFT], board, lvl + 1);
+            FillTreeRightSideB(src->next_move[RIGHT], board, lvl + 1);
+        
             return;
         }
-        else if (board[RowToInt(src->pos->row) - 1][ColToInt(src->pos->col) + 1] == '\0' && src->total_captures_so_far == 0)
+        else if (board[RowToInt(src->pos->row) - 1][ColToInt(src->pos->col) + 1] == '\0' && lvl == 0)
         {
             checkersPos pos = { src->pos->row - 1, src->pos->col + 1 };
 
@@ -368,11 +314,8 @@ SingleSourceMoveList* FindSingleSourceOptimalMove(SingleSourceMovesTree* moves_t
             }
             else
             {
-                int leftRow = moves_tree->source->next_move[LEFT]->pos->row;
-                int rightRow = moves_tree->source->next_move[RIGHT]->pos->row;
 
-                if ((moves_tree->source->board[RowToInt(moves_tree->source->pos->row)][ColToInt(moves_tree->source->pos->col)] == 'T' && leftRow > rightRow) ||
-                    (moves_tree->source->board[RowToInt(moves_tree->source->pos->row)][ColToInt(moves_tree->source->pos->col)] != 'T' && leftRow < rightRow))
+                if (moves_tree->source->board[RowToInt(moves_tree->source->pos->row)][ColToInt(moves_tree->source->pos->col)] == 'T' )
                 {
                     currentCell->next = Move(leftMove, list);
                     moves_tree->source = leftMove;
@@ -555,7 +498,7 @@ void Turn(Board board, Player player) //TODO: delete all moves after the play
     while (multiple_move_cell != NULL)
     {
         //finding the best play to do
-        current_captures = multiple_move_cell->single_source_moves_list->head->captures;
+        current_captures = multiple_move_cell->single_source_moves_list->tail->captures;
 
         if (current_captures >= max_captures)
         {

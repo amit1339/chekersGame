@@ -34,10 +34,10 @@ typedef struct _SingleSourceMovesTree
 }SingleSourceMovesTree;
 
 SingleSourceMovesTree* FindSingleSourceMoves(Board board, checkersPos* src);
-void FillTreeLeftSideT(SingleSourceMovesTreeNode* src, Board board);
-void FillTreeRightSideT(SingleSourceMovesTreeNode* src, Board board);
-void FillTreeLeftSideB(SingleSourceMovesTreeNode* src, Board board);
-void FillTreeRightSideB(SingleSourceMovesTreeNode* src, Board board);
+void FillTreeLeftSideT(SingleSourceMovesTreeNode* src, Board board, unsigned short lvl);
+void FillTreeRightSideT(SingleSourceMovesTreeNode* src, Board board, unsigned short lvl );
+void FillTreeLeftSideB(SingleSourceMovesTreeNode* src, Board board, unsigned short lvl);
+void FillTreeRightSideB(SingleSourceMovesTreeNode* src, Board board, unsigned short lvl);
 
 SingleSourceMovesTreeNode* InitNewTreeNode(Board board, checkersPos* pos);
 void DeleteTreeNodes(SingleSourceMovesTreeNode* node);
