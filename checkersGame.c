@@ -272,6 +272,7 @@ SingleSourceMoveList* FindSingleSourceOptimalMove(SingleSourceMovesTree* moves_t
 
     SingleSourceMoveListCell* currentCell = InitNewSingleSourceMoveList(moves_tree->source->pos, moves_tree->source->total_captures_so_far);
     list->head = currentCell;
+    SingleSourceMovesTreeNode* head = moves_tree->source;
 
     while (moves_tree->source != NULL)
     {
@@ -328,7 +329,7 @@ SingleSourceMoveList* FindSingleSourceOptimalMove(SingleSourceMovesTree* moves_t
     }
 
     list->tail = currentCell;
-    DeleteTreeNodes(moves_tree->source);
+    DeleteTreeNodes(head);
     free(moves_tree);
     return list;
 }
